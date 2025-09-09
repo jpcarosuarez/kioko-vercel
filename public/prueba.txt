@@ -1,0 +1,6 @@
+Este es un archivo de prueba para verificar la integración con Google Drive.
+Fecha: 2025-09-05
+Sistema: Kiosko Inmobiliario - Gestión de Documentos
+Propósito: Verificar conectividad y permisos de Google Drive API
+
+¡Si puedes ver este archivo en tu Google Drive, la integración está funcionando correctamente!
