@@ -51,12 +51,6 @@ export default function Index() {
     setIsLoading(false);
   };
 
-  const demoCredentials = [
-    { email: 'john.doe@email.com', password: 'password123', name: 'Juan Pérez (Propietario)' },
-    { email: 'jane.smith@email.com', password: 'password123', name: 'María García (Propietario)' },
-    { email: 'demo@email.com', password: 'demo', name: 'Usuario Demo (Propietario)' },
-    { email: 'admin@kioskoinmobiliario.com', password: 'admin123', name: 'Administrador' }
-  ];
 
   const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
@@ -146,33 +140,6 @@ export default function Index() {
                 {isLoading ? 'Iniciando Sesión...' : 'Iniciar Sesión'}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Demo Accounts */}
-        <Card className="bg-gray-50 border-dashed">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-700">Cuentas de Demostración</CardTitle>
-            <CardDescription className="text-xs">
-              Haz clic para usar credenciales de prueba
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {demoCredentials.map((demo, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                className="w-full justify-start text-left h-auto p-3"
-                onClick={() => handleDemoLogin(demo.email, demo.password)}
-                disabled={isLoading}
-              >
-                <div className="text-left">
-                  <div className="font-medium text-sm">{demo.name}</div>
-                  <div className="text-xs text-gray-500">{demo.email}</div>
-                </div>
-              </Button>
-            ))}
           </CardContent>
         </Card>
 
