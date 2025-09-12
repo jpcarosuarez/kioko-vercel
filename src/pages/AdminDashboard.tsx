@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Users, FileText, Home, CheckCircle, AlertCircle, TestTube } from 'lucide-react';
+import { Upload, Users,  LogOut, FileText, Building, Home, CheckCircle, AlertCircle, TestTube, User } from 'lucide-react';
 import { mockUsers, mockProperties, mockDocuments } from '@/lib/mockData';
+import { useAuth } from '@/components/AuthProvider';
 import { 
   initializeGoogleDrive, 
   authenticateUser, 
@@ -23,6 +24,7 @@ import {
   isAuthenticated,
   GoogleDriveFile
 } from '@/lib/googleDrive';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -62,6 +64,9 @@ export default function AdminDashboard() {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
   const [isGoogleDriveReady, setIsGoogleDriveReady] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
 
   // New user form
   const [newUser, setNewUser] = useState({
@@ -69,6 +74,10 @@ export default function AdminDashboard() {
     email: '',
     role: 'owner' as 'admin' | 'owner'
   });
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   useEffect(() => {
     initializeGoogleDrive()
@@ -263,11 +272,48 @@ export default function AdminDashboard() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+
+    
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Panel de Administración</h1>
           <p className="text-muted-foreground">Gestiona usuarios, propiedades y documentos</p>
+
         </div>
+
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-3">
+              <Building className="h-8 w-8 text-blue-600" />
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Kiosko Inmobiliario</h1>
+                <p className="text-sm text-gray-500">Portal de Gestión de Documentos</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm">
+                <User className="h-4 w-4 text-gray-500" />
+                <span className="font-medium">{user.name}</span>
+              </div>
+              <Button
+
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Cerrar Sesión
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+
         <Badge variant="outline" className="flex items-center gap-2">
           {isGoogleDriveReady ? (
             <>
