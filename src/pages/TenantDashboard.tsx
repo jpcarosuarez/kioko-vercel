@@ -1,25 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import { PropertyCard } from '@/components/PropertyCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, User, Building, FileText, Plus, Eye, Settings } from 'lucide-react';
+import { LogOut, User, Building, FileText, Eye, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Property, Document, OwnerStats } from '@/types/models';
+import { Property, Document, TenantStats } from '@/types/models';
 import { FirestoreService } from '@/lib/firestore';
 import { LoadingState } from '@/components/common/LoadingState';
 import { ErrorState } from '@/components/common/ErrorState';
-import { formatCurrency } from '@/lib/currencyUtils';
 import { Navbar } from '@/components/common/Navbar';
 import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
+import { formatCurrency } from '@/lib/currencyUtils';
 
-export default function Dashboard() {
+export default function TenantDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [stats, setStats] = useState<OwnerStats | null>(null);
+  const [stats, setStats] = useState<TenantStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewerDocument, setViewerDocument] = useState<Document | null>(null);
@@ -31,63 +30,52 @@ export default function Dashboard() {
       return;
     }
     
-    // Redirect users to appropriate dashboards
+    // Redirect non-tenant users to appropriate dashboard
     if (user.customClaims?.role === 'admin') {
       navigate('/admin');
       return;
     }
     
-    if (user.customClaims?.role === 'tenant') {
-      navigate('/tenant');
+    if (user.customClaims?.role === 'owner') {
+      navigate('/dashboard');
       return;
     }
 
-    loadOwnerData();
+    loadTenantData();
   }, [user, navigate]);
 
-  const loadOwnerData = async () => {
+  const loadTenantData = async () => {
     if (!user?.uid) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      // Load properties owned by this user
-      const ownerProperties = await FirestoreService.getPropertiesByOwner(user.uid);
-      setProperties(ownerProperties);
+      // Load properties assigned to this tenant
+      const tenantProperties = await FirestoreService.getPropertiesByTenant(user.uid);
+      setProperties(tenantProperties);
 
-      // Load documents for owner's properties with visibility filtering
-      const propertyIds = ownerProperties.map(p => p.id);
-      const ownerDocuments = await FirestoreService.getDocumentsByProperties(propertyIds, 'owner');
-      setDocuments(ownerDocuments);
+      // Load documents for tenant's properties with visibility filtering
+      const propertyIds = tenantProperties.map(p => p.id);
+      const tenantDocuments = await FirestoreService.getDocumentsByProperties(propertyIds, 'tenant');
+      setDocuments(tenantDocuments);
 
       // Calculate stats
-      const totalRentalValue = ownerProperties.reduce((sum, prop) => sum + (prop.rentalValue || 0), 0);
-      const ownerStats: OwnerStats = {
-        totalProperties: ownerProperties.length,
-        totalDocuments: ownerDocuments.length,
-        totalValue: totalRentalValue,
-        recentDocuments: ownerDocuments
+      const tenantStats: TenantStats = {
+        assignedProperties: tenantProperties.length,
+        availableDocuments: tenantDocuments.length,
+        recentDocuments: tenantDocuments
           .sort((a, b) => b.uploadedAt.toMillis() - a.uploadedAt.toMillis())
           .slice(0, 5)
       };
-      setStats(ownerStats);
+      setStats(tenantStats);
 
     } catch (error) {
-      console.error('Error loading owner data:', error);
+      console.error('Error loading tenant data:', error);
       setError('Error al cargar los datos. Por favor, intenta de nuevo.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleViewDocuments = (propertyId: string) => {
-    navigate(`/documents/${propertyId}`);
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
   };
 
   const handleViewDocument = (document: Document) => {
@@ -100,7 +88,16 @@ export default function Dashboard() {
     setIsViewerOpen(false);
   };
 
-  if (!user || user.customClaims?.role !== 'owner') {
+  const handleViewProperty = (propertyId: string) => {
+    navigate(`/documents/${propertyId}`);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  if (!user || user.customClaims?.role !== 'tenant') {
     return null;
   }
 
@@ -112,7 +109,7 @@ export default function Dashboard() {
     return (
       <ErrorState 
         message={error}
-        onRetry={loadOwnerData}
+        onRetry={loadTenantData}
       />
     );
   }
@@ -123,59 +120,52 @@ export default function Dashboard() {
     return date.toLocaleDateString('es-ES');
   };
 
+  const getDocumentTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      deed: 'Escritura',
+      contract: 'Contrato',
+      invoice: 'Factura',
+      receipt: 'Recibo',
+      insurance: 'Seguro',
+      tax_document: 'Documento Fiscal',
+      maintenance: 'Mantenimiento',
+      inspection: 'Inspección',
+      other: 'Otro'
+    };
+    return labels[type] || type;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <Navbar 
         user={user as any} 
         onLogout={handleLogout} 
-        userRole="owner" 
+        userRole="tenant" 
       />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            ¡Bienvenido, {user.displayName || 'Propietario'}!
+            ¡Bienvenido, {user.displayName || 'Inquilino'}!
           </h2>
-          <p className="text-gray-600">Gestiona y visualiza los documentos de tus propiedades</p>
+          <p className="text-gray-600">Accede a los documentos de tus propiedades arrendadas</p>
         </div>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-slate-700">Mis Propiedades</CardTitle>
                 <Building className="h-5 w-5 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-slate-900">{stats.totalProperties}</div>
+                <div className="text-3xl font-bold text-slate-900">{stats.assignedProperties}</div>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="text-sm text-slate-600">
-                    <span className="font-medium text-green-600">
-                      {properties.filter(p => p.isActive).length}
-                    </span> activas
-                  </div>
-                  <div className="text-xs text-slate-500">
-                    ({Math.round((properties.filter(p => p.isActive).length / stats.totalProperties) * 100)}%)
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Ingresos Mensuales</CardTitle>
-                <span className="text-emerald-600">$</span>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900">
-                  {formatCurrency(stats.totalValue)}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="text-sm text-slate-600">
-                    Valor total de arriendos
+                    Propiedades arrendadas
                   </div>
                 </div>
               </CardContent>
@@ -187,7 +177,7 @@ export default function Dashboard() {
                 <FileText className="h-5 w-5 text-amber-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-slate-900">{stats.totalDocuments}</div>
+                <div className="text-3xl font-bold text-slate-900">{stats.availableDocuments}</div>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="text-sm text-slate-600">
                     Disponibles
@@ -198,7 +188,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Properties Grid */}
+        {/* Properties Section */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-gray-900">Tus Propiedades</h3>
@@ -209,64 +199,69 @@ export default function Dashboard() {
               <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No se Encontraron Propiedades</h3>
               <p className="text-gray-500">
-                Aún no tienes propiedades asignadas a tu cuenta. Contacta al administrador para más información.
+                Aún no tienes propiedades arrendadas asignadas a tu cuenta. Contacta al administrador para más información.
               </p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((property) => (
-                <Card key={property.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-medium text-gray-900 mb-1">
-                          {property.address}
-                        </CardTitle>
-                        <Badge variant="outline" className="text-xs">
-                          {property.type === 'residential' ? 'Residencial' : 'Comercial'}
-                        </Badge>
+              {properties.map((property) => {
+                // Contar documentos para esta propiedad
+                const propertyDocuments = documents.filter(doc => doc.propertyId === property.id);
+                
+                return (
+                  <Card key={property.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg font-medium text-gray-900 mb-1">
+                            {property.address}
+                          </CardTitle>
+                          <Badge variant="outline" className="text-xs">
+                            {property.type === 'residential' ? 'Residencial' : 'Comercial'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    {property.imageUrl && (
-                      <div className="mb-4">
-                        <img
-                          src={property.imageUrl}
-                          alt={property.address}
-                          className="w-full h-32 object-cover rounded-md"
-                        />
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {property.imageUrl && (
+                        <div className="mb-4">
+                          <img
+                            src={property.imageUrl}
+                            alt={property.address}
+                            className="w-full h-40 object-cover rounded-lg shadow-sm"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-3 text-sm text-gray-600 mb-4">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-700">Valor de arriendo:</span>
+                          <span className="font-semibold text-green-600">{formatCurrency(property.rentalValue || 0)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-700">Inicio de contrato:</span>
+                          <span className="text-gray-600">{formatDate(property.contractStartDate)}</span>
+                        </div>
+                        <div className="pt-2 border-t border-gray-100">
+                          <p className={`font-medium text-center ${propertyDocuments.length > 0 ? 'text-blue-600' : 'text-gray-500'}`}>
+                            {propertyDocuments.length > 0 
+                              ? `${propertyDocuments.length} documento${propertyDocuments.length !== 1 ? 's' : ''} disponible${propertyDocuments.length !== 1 ? 's' : ''}`
+                              : 'Sin documentos disponibles'
+                            }
+                          </p>
+                        </div>
                       </div>
-                    )}
-                    <div className="space-y-2 text-sm text-gray-600 mb-4">
-                      <p>Valor de arriendo: {formatCurrency(property.rentalValue)}</p>
-                      <p>Inicio de contrato: {formatDate(property.contractStartDate)}</p>
-                      {property.squareMeters && (
-                        <p>Área: {property.squareMeters} m²</p>
-                      )}
-                      {property.bedrooms && (
-                        <p>Habitaciones: {property.bedrooms}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-gray-600">
-                        {documents.filter(doc => doc.propertyId === property.id).length} documentos
-                      </span>
-                      <Badge variant={property.isActive ? "default" : "secondary"}>
-                        {property.isActive ? 'Activa' : 'Inactiva'}
-                      </Badge>
-                    </div>
-                    <Button
-                      onClick={() => handleViewDocuments(property.id)}
-                      className="w-full"
-                      size="sm"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver Documentos
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Button
+                        onClick={() => handleViewProperty(property.id)}
+                        className="w-full bg-primary hover:bg-primary-600 text-white"
+                        size="sm"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver Documentos
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
@@ -291,7 +286,7 @@ export default function Dashboard() {
                               <h4 className="font-medium text-gray-900">{document.displayName}</h4>
                               <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <Badge variant="outline" className="text-xs">
-                                  {document.type}
+                                  {getDocumentTypeLabel(document.type)}
                                 </Badge>
                                 <span>•</span>
                                 <span>Subido el {formatDate(document.uploadedAt)}</span>
