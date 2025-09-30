@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+    
+    function isOwner() {
+      return isAuthenticated() && request.auth.token.role == 'owner';
+    }
+    
+    function isTenant() {
+      return isAuthenticated() && request.auth.token.role == 'tenant';
+    }
+    
+    function isOwnerOrAdmin() {
+      return isOwner() || isAdmin();
+    }
+    
+    function isOwnerOfResource(ownerId) {
+      return isAuthenticated() && request.auth.uid == ownerId;
+    }
+    
+    function isOwnerOrAdminOfResource(ownerId) {
+      return isOwnerOfResource(ownerId) || isAdmin();
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own data, admins can read all
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
+      
+      // Only admins can create/update/delete users
+      allow write: if isAdmin();
+    }
+
+    // Properties collection
+    match /properties/{propertyId} {
+      // Owners can read their own properties, tenants can read assigned properties, admins can read all
+      allow read: if isAuthenticated() && 
+        (resource.data.ownerId == request.auth.uid || 
+         resource.data.tenantId == request.auth.uid ||
+         isAdmin());
+      
+      // Only admins can create/update/delete properties
+      allow write: if isAdmin();
+    }
+
+    // Documents collection
+    match /documents/{documentId} {
+      // Owners can read their own documents, admins can read all
+      allow read: if isAuthenticated() && 
+        (resource.data.ownerId == request.auth.uid || isAdmin());
+      
+      // Only admins can create documents
+      allow create: if isAdmin() && 
+        request.resource.data.ownerId is string &&
+        request.resource.data.ownerDisplayName is string &&
+        request.resource.data.storagePath is string &&
+        request.resource.data.downloadUrl is string &&
+        request.resource.data.displayName is string &&
+        request.resource.data.originalName is string &&
+        request.resource.data.mimeType is string &&
+        request.resource.data.size is number &&
+        request.resource.data.uploadedBy is string &&
+        request.resource.data.uploadedAt is timestamp;
+      
+      // Owners can update their own documents (only displayName, description, tags)
+      allow update: if isOwnerOfResource(resource.data.ownerId) && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'description', 'tags', 'updatedAt']);
+      
+      // Admins can update any document
+      allow update: if isAdmin();
+      
+      // Only admins can delete documents
+      allow delete: if isAdmin();
+    }
+
+    // System settings (admin only)
+    match /settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Audit logs (admin only)
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
