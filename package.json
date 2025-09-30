@@ -6,7 +6,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint --quiet ./src",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "create-users": "node scripts/create-demo-users.js",
+    "bootstrap:setup": "node scripts/setup-environment.js",
+    "bootstrap:validate": "node scripts/setup-environment.js validate",
+    "bootstrap:run": "node scripts/bootstrap-initial-users.js",
+    "bootstrap:check": "node scripts/check-bootstrap-status.js",
+    "bootstrap": "npm run bootstrap:setup && npm run bootstrap:run"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -44,6 +50,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
+    "firebase": "^12.3.0",
     "framer-motion": "^11.0.0",
     "google-auth-library": "^10.3.0",
     "googleapis": "^159.0.0",
@@ -65,7 +72,7 @@
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^10.0.0",
     "vaul": "^1.1.2",
-    "zod": "^3.23.8",
+    "zod": "^3.25.76",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
@@ -73,20 +80,26 @@
     "@metagptx/vite-plugin-source-locator": "latest",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.15",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.5.5",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.8",
     "@vitejs/plugin-react-swc": "^3.5.0",
+    "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "jsdom": "^27.0.0",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^3.2.4"
   }
 }
