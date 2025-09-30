@@ -78,6 +78,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@metagptx/vite-plugin-source-locator": "latest",
+    "@rollup/rollup-linux-x64-gnu": "^4.52.3",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.8.0",
