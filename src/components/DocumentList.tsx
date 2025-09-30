@@ -3,9 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Document, getDocumentIcon, getDocumentColor } from '@/lib/mockData';
-import { Download, Eye, Search, Filter } from 'lucide-react';
+import { Document } from '@/types/models';
+import { Download, Eye, Search, Filter, File, FileImage, FileSpreadsheet, FileType, FileText } from 'lucide-react';
 import { useState } from 'react';
+
+// Legacy component - consider using DocumentListEnhanced for new implementations
+// This component is kept for backward compatibility
 
 interface DocumentListProps {
   documents: Document[];
@@ -17,41 +20,99 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, propertyA
   const [filterType, setFilterType] = useState<string>('all');
 
   const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = doc.displayName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || doc.type === filterType;
     return matchesSearch && matchesType;
   });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return 'N/A';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   const handleDownload = (document: Document) => {
     // In a real app, this would trigger actual file download
-    alert(`Descargando: ${document.name}`);
+    alert(`Descargando: ${document.displayName}`);
   };
 
   const handleView = (document: Document) => {
     // In a real app, this would open document viewer
-    alert(`Abriendo: ${document.name}`);
+    alert(`Abriendo: ${document.displayName}`);
   };
 
   const documentTypes = Array.from(new Set(documents.map(doc => doc.type)));
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      lease: 'Arrendamiento',
+      deed: 'Escritura',
+      contract: 'Contrato',
+      invoice: 'Factura',
+      receipt: 'Recibo',
       insurance: 'Seguro',
+      tax_document: 'Documento Fiscal',
       maintenance: 'Mantenimiento',
+      inspection: 'Inspección',
+      other: 'Otro',
+      // Legacy types
+      lease: 'Arrendamiento',
       financial: 'Financiero',
-      legal: 'Legal',
-      inspection: 'Inspección'
+      legal: 'Legal'
     };
     return labels[type] || type;
+  };
+
+  const getFileIcon = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    
+    switch (extension) {
+      case 'pdf':
+        return <File className="h-5 w-5 text-red-600" />;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'bmp':
+      case 'webp':
+      case 'svg':
+        return <FileImage className="h-5 w-5 text-green-600" />;
+      case 'xlsx':
+      case 'xls':
+      case 'csv':
+        return <FileSpreadsheet className="h-5 w-5 text-green-700" />;
+      case 'docx':
+      case 'doc':
+        return <FileType className="h-5 w-5 text-blue-600" />;
+      case 'txt':
+      case 'rtf':
+        return <FileText className="h-5 w-5 text-gray-600" />;
+      default:
+        return <File className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const getDocumentColor = (type: string) => {
+    const colors: Record<string, string> = {
+      lease: 'bg-blue-100 text-blue-800',
+      insurance: 'bg-green-100 text-green-800',
+      maintenance: 'bg-orange-100 text-orange-800',
+      financial: 'bg-purple-100 text-purple-800',
+      legal: 'bg-indigo-100 text-indigo-800',
+      inspection: 'bg-yellow-100 text-yellow-800'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800';
   };
 
   return (
@@ -76,7 +137,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, propertyA
             <SelectItem value="all">Todos los Tipos</SelectItem>
             {documentTypes.map(type => (
               <SelectItem key={type} value={type}>
-                {getDocumentIcon(type)} {getTypeLabel(type)}
+                {getTypeLabel(type)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -103,15 +164,15 @@ export const DocumentList: React.FC<DocumentListProps> = ({ documents, propertyA
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="text-2xl flex-shrink-0">
-                      {getDocumentIcon(document.type)}
+                    <div className="flex-shrink-0">
+                      {getFileIcon(document.originalName || document.displayName)}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate">{document.name}</h3>
+                      <h3 className="font-medium truncate">{document.displayName}</h3>
                       <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                        <span>{formatDate(document.uploadDate)}</span>
-                        <span>{document.fileSize}</span>
+                        <span>{formatDate(document.uploadedAt)}</span>
+                        <span>{formatFileSize(document.size)}</span>
                       </div>
                     </div>
                     

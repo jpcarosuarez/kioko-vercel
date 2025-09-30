@@ -1,16 +1,34 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Property, mockDocuments } from '@/lib/mockData';
-import { FileText, MapPin, Calendar, DollarSign } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Property } from '@/types/models';
+import { FileText, MapPin, Calendar, DollarSign, MoreHorizontal, Edit, Trash2, User } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
   onViewDocuments: (propertyId: string) => void;
+  onEdit?: (property: Property) => void;
+  onDelete?: (property: Property) => void;
+  onTransferOwnership?: (property: Property) => void;
+  showManagementActions?: boolean;
+  documentCount?: number;
 }
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDocuments }) => {
-  const documentCount = mockDocuments.filter(doc => doc.propertyId === property.id).length;
+export const PropertyCard: React.FC<PropertyCardProps> = ({ 
+  property, 
+  onViewDocuments,
+  onEdit,
+  onDelete,
+  onTransferOwnership,
+  showManagementActions = false,
+  documentCount = 0
+}) => {
   
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -72,13 +90,48 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDocu
             <span>{documentCount} documento{documentCount !== 1 ? 's' : ''}</span>
           </div>
           
-          <Button 
-            onClick={() => onViewDocuments(property.id)}
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Ver Documentos
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => onViewDocuments(property.id)}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Ver Documentos
+            </Button>
+            
+            {showManagementActions && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onEdit && (
+                    <DropdownMenuItem onClick={() => onEdit(property)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar Propiedad
+                    </DropdownMenuItem>
+                  )}
+                  {onTransferOwnership && (
+                    <DropdownMenuItem onClick={() => onTransferOwnership(property)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Transfer Ownership
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <DropdownMenuItem
+                      onClick={() => onDelete(property)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Eliminar Propiedad
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
