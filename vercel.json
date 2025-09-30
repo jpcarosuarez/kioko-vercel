@@ -3,5 +3,10 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "buildCommand": "npm ci && npm run build",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "functions": {
+    "app/api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
