@@ -1,22 +1,100 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
-import { DocumentList } from '@/components/DocumentList';
+import { UnifiedDocumentList } from '@/components/documents/UnifiedDocumentList';
 import { Button } from '@/components/ui/button';
-import { mockProperties, mockDocuments } from '@/lib/mockData';
-import { ArrowLeft, Building, MapPin } from 'lucide-react';
+import { ArrowLeft, Building, MapPin, FileText } from 'lucide-react';
+import { Property, Document } from '@/types/models';
+import { FirestoreService } from '@/lib/firestore';
+import { LoadingState } from '@/components/common/LoadingState';
+import { ErrorState } from '@/components/common/ErrorState';
 
 export default function DocumentViewer() {
   const { propertyId } = useParams<{ propertyId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [property, setProperty] = useState<Property | null>(null);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+      return;
+    }
+
+    if (!propertyId) {
+      setError('ID de propiedad no válido');
+      setLoading(false);
+      return;
+    }
+
+    loadPropertyData();
+  }, [user, propertyId, navigate]);
+
+  const loadPropertyData = async () => {
+    if (!user?.uid || !propertyId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load property details
+      const propertyData = await FirestoreService.getPropertyById(propertyId);
+      
+      if (!propertyData) {
+        setError('Propiedad no encontrada');
+        return;
+      }
+
+      // Verify access (owner or tenant)
+      const isOwner = propertyData.ownerId === user.uid;
+      const isTenant = propertyData.tenantId === user.uid;
+      
+      if (!isOwner && !isTenant) {
+        setError('No tienes acceso a esta propiedad');
+        return;
+      }
+
+      setProperty(propertyData);
+
+      // Load documents for this property with visibility filtering
+      const userRole = isOwner ? 'owner' : (isTenant ? 'tenant' : 'admin');
+      const propertyDocuments = await FirestoreService.getDocumentsByProperties([propertyId], userRole);
+      setDocuments(propertyDocuments);
+
+    } catch (error) {
+      console.error('Error loading property data:', error);
+      setError('Error al cargar los datos de la propiedad');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!user) {
-    navigate('/');
     return null;
   }
 
-  const property = mockProperties.find(p => p.id === propertyId && p.ownerId === user.id);
-  
+  if (loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button onClick={() => navigate('/dashboard')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver al Panel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!property) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -31,8 +109,6 @@ export default function DocumentViewer() {
       </div>
     );
   }
-
-  const propertyDocuments = mockDocuments.filter(doc => doc.propertyId === propertyId);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -82,7 +158,7 @@ export default function DocumentViewer() {
             </div>
             
             <div className="text-sm text-gray-500">
-              {user.name}
+              {user.displayName || user.email}
             </div>
           </div>
         </div>
@@ -108,12 +184,12 @@ export default function DocumentViewer() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Valor:</span>
-                    <span className="ml-2 font-medium">{formatCurrency(property.value)}</span>
+                    <span className="text-gray-500">Valor de Arriendo:</span>
+                    <span className="ml-2 font-medium">{formatCurrency(property.rentalValue)}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500">Fecha de Compra:</span>
-                    <span className="ml-2 font-medium">{formatDate(property.purchaseDate)}</span>
+                    <span className="text-gray-500">Inicio de Contrato:</span>
+                    <span className="ml-2 font-medium">{formatDate(property.contractStartDate)}</span>
                   </div>
                 </div>
               </div>
@@ -122,10 +198,26 @@ export default function DocumentViewer() {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <DocumentList 
-            documents={propertyDocuments} 
-            propertyAddress={property.address}
-          />
+          {documents.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron documentos</h3>
+              <p className="text-gray-600 mb-6">
+                No hay documentos asociados a esta propiedad en tu cuenta.
+              </p>
+              <Button onClick={() => navigate(user.customClaims?.role === 'tenant' ? '/tenant' : '/dashboard')} variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver al Panel
+              </Button>
+            </div>
+          ) : (
+            <UnifiedDocumentList 
+              documents={documents} 
+              propertyAddress={property.address}
+              showPropertyInfo={true}
+              emptyMessage="No se encontraron documentos asociados a esta propiedad en tu cuenta."
+            />
+          )}
         </div>
       </main>
     </div>

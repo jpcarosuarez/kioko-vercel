@@ -1,9 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* ========================================== */
+    /* THEME PALETTE 10 - INDIGO COOL GREY (DEFAULT) */
+    /* ========================================== */
+    /* Primary color palette (Indigo-based) */
+    --c-primary-50: 238, 242, 255;
+    --c-primary-100: 224, 231, 255;
+    --c-primary-200: 199, 210, 254;
+    --c-primary-300: 165, 180, 252;
+    --c-primary-400: 129, 140, 248;
+    --c-primary-500: 99, 102, 241;
+    --c-primary-600: 79, 70, 229;
+    --c-primary-700: 67, 56, 202;
+    --c-primary-800: 55, 48, 163;
+    --c-primary-900: 49, 46, 129;
+
+    /* Secondary color palette (Teal-based) */
+    --c-secondary-50: 240, 253, 250;
+    --c-secondary-100: 204, 251, 241;
+    --c-secondary-200: 153, 246, 228;
+    --c-secondary-300: 153, 246, 228;
+    --c-secondary-400: 45, 212, 191;
+    --c-secondary-500: 20, 184, 166;
+    --c-secondary-600: 13, 148, 136;
+    --c-secondary-700: 15, 118, 110;
+    --c-secondary-800: 17, 94, 89;
+    --c-secondary-900: 19, 78, 74;
+
+    /* Neutral color palette (Cool Grey-based) */
+    --c-neutral-50: 249, 250, 251;
+    --c-neutral-100: 243, 244, 246;
+    --c-neutral-200: 229, 231, 235;
+    --c-neutral-300: 209, 213, 219;
+    --c-neutral-400: 156, 163, 175;
+    --c-neutral-500: 107, 114, 128;
+    --c-neutral-600: 75, 85, 99;
+    --c-neutral-700: 55, 65, 81;
+    --c-neutral-800: 31, 41, 55;
+    --c-neutral-900: 17, 24, 39;
+
+    /* Legacy shadcn/ui variables (maintained for compatibility) */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -35,19 +77,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +131,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   }
 }
