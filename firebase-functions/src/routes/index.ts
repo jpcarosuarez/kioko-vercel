@@ -18,6 +18,8 @@ const app = express();
 app.use(cors({ 
   origin: [
     'https://kioko-vercel-snss.vercel.app',
+    'https://kiosko.com.co',
+    'http://kiosko.com.co',
     'https://kioko-vercel.vercel.app',
     'http://localhost:3000',
     'http://localhost:5173'
