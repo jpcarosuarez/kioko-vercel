@@ -228,15 +228,14 @@ export class UserManagementService {
       // Commit the batch operation
       await batch.commit();
 
-      // Delete user from Firebase Auth
+      // Delete user from Firebase Auth using backend API
       try {
-        const firebaseUser = await this.getFirebaseUserByUid(user.uid);
-        if (firebaseUser) {
-          await firebaseDeleteUser(firebaseUser);
-        }
+        const { ApiService } = await import('./apiService');
+        await ApiService.deleteUser(userId);
+        console.log(`Successfully deleted user ${userId} from Firebase Auth`);
       } catch (error) {
-        console.warn('Could not delete Firebase Auth user:', error);
-        // Continue even if Auth deletion fails
+        console.warn('Could not delete Firebase Auth user via API:', error);
+        // Continue even if Auth deletion fails - Firestore data is already deleted
       }
 
       console.log(`Successfully deleted user ${userId} and associated data`);
