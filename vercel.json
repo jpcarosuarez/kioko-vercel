@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://api-hdh3n2p6bq-uc.a.run.app/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "buildCommand": "npm ci && npm run build",

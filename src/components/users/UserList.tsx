@@ -103,6 +103,9 @@ export const UserList: React.FC<UserListProps> = ({
   const handleDeleteUser = async () => {
     if (!deleteDialog.user) return;
 
+    console.log('UserList handleDeleteUser - user:', deleteDialog.user);
+    console.log('UserList handleDeleteUser - user.id:', deleteDialog.user.id);
+
     setDeleteDialog(prev => ({ ...prev, loading: true }));
     
     try {

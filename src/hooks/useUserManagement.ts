@@ -109,6 +109,8 @@ export const useUserManagement = (): UseUserManagementReturn => {
     setError(null);
     
     try {
+      console.log('useUserManagement deleteUser called with userId:', userId);
+      
       // Use Firebase directly to delete user
       await UserManagementService.deleteUser(userId);
       
