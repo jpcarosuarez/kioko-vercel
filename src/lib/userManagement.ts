@@ -177,6 +177,11 @@ export class UserManagementService {
    */
   static async deleteUser(userId: string): Promise<void> {
     try {
+      // Validate userId
+      if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID provided');
+      }
+
       // Get the user document
       const userDoc = await usersService.getById(userId);
       if (!userDoc) {

@@ -6,7 +6,7 @@
 import { auth } from './firebase';
 
 // API Configuration
-const API_BASE_URL = 'https://api-hdh3n2p6bq-uc.a.run.app';
+const API_BASE_URL = '/api';
 
 // Types for API requests and responses
 export interface ApiError {
