@@ -318,8 +318,9 @@ export class ApiService {
     }
 
     static async deleteUser(userId: string): Promise<{ success: boolean; message: string }> {
-        return apiRequest<{ success: boolean; message: string }>(`/auth/deleteUser/${userId}`, {
+        return apiRequest<{ success: boolean; message: string }>('/auth/deleteUser', {
             method: 'DELETE',
+            body: JSON.stringify({ uid: userId }),
         });
     }
 
