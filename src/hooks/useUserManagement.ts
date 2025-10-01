@@ -66,7 +66,14 @@ export const useUserManagement = (): UseUserManagementReturn => {
       setUsers(prevUsers => [response.user, ...prevUsers]);
       
       return response.user;
-    } catch (error) {
+    } catch (error: any) {
+      // Handle specific error cases
+      if (error.message?.includes('already exists') || error.message?.includes('409')) {
+        const specificError = new Error(`El email ${userData.email} ya está registrado en el sistema. Por favor, usa un email diferente.`);
+        setError(specificError.message);
+        throw specificError;
+      }
+      
       handleError(error);
       throw error;
     } finally {

@@ -182,64 +182,11 @@ export class UserManagementService {
         throw new Error('Invalid user ID provided');
       }
 
-      // Get the user document
-      const userDoc = await usersService.getById(userId);
-      if (!userDoc) {
-        throw new Error('User not found');
-      }
-
-      const user = userDoc as User;
-
-      // Start a batch operation for cascade deletion
-      const batch = writeBatch(db);
-
-      // Get all properties owned by this user
-      const userProperties = await propertiesService.getWhere('ownerId', '==', userId);
+      // Delete user completely via backend API (includes Firebase Auth + Firestore cleanup)
+      const { ApiService } = await import('./apiService');
+      await ApiService.deleteUser(userId);
       
-      // Get all documents associated with this user's properties
-      const propertyIds = userProperties.map(prop => (prop as Property).id);
-      const userDocuments: Document[] = [];
-      
-      for (const propertyId of propertyIds) {
-        const propertyDocs = await documentsService.getWhere('propertyId', '==', propertyId);
-        userDocuments.push(...(propertyDocs as Document[]));
-      }
-
-      // Also get documents where user is the owner directly
-      const directUserDocs = await documentsService.getWhere('ownerId', '==', userId);
-      userDocuments.push(...(directUserDocs as Document[]));
-
-      // Delete all documents from Firestore (Google Drive cleanup would be handled separately)
-      for (const document of userDocuments) {
-        const docRef = doc(db, COLLECTIONS.DOCUMENTS, document.id);
-        batch.delete(docRef);
-      }
-
-      // Delete all properties
-      for (const property of userProperties) {
-        const propRef = doc(db, COLLECTIONS.PROPERTIES, (property as Property).id);
-        batch.delete(propRef);
-      }
-
-      // Delete the user document
-      const userRef = doc(db, COLLECTIONS.USERS, userId);
-      batch.delete(userRef);
-
-      // Commit the batch operation
-      await batch.commit();
-
-      // Delete user from Firebase Auth
-      try {
-        const firebaseUser = await this.getFirebaseUserByUid(user.uid);
-        if (firebaseUser) {
-          await firebaseDeleteUser(firebaseUser);
-        }
-      } catch (error) {
-        console.warn('Could not delete Firebase Auth user:', error);
-        // Continue even if Auth deletion fails
-      }
-
-      console.log(`Successfully deleted user ${userId} and associated data`);
+      console.log(`Successfully deleted user ${userId} via backend API`);
     } catch (error: any) {
       console.error('Error deleting user:', error);
       
@@ -248,13 +195,14 @@ export class UserManagementService {
         if (error.code.startsWith('auth/')) {
           const userError = handleFirebaseAuthError(error);
           throw new Error(userError.message);
-        } else {
+        } else if (error.code.startsWith('firestore/')) {
           const userError = handleFirestoreError(error);
           throw new Error(userError.message);
         }
       }
       
-      throw error;
+      const userError = handleGenericError(error);
+      throw new Error(userError.message);
     }
   }
 
