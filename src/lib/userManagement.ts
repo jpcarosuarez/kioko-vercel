@@ -182,8 +182,6 @@ export class UserManagementService {
         throw new Error('Invalid user ID provided');
       }
 
-      console.log('Deleting user with ID:', userId);
-
       // Get the user document
       const userDoc = await usersService.getById(userId);
       if (!userDoc) {
@@ -315,8 +313,6 @@ export class UserManagementService {
       } else {
         users = await usersService.getAll() as User[];
       }
-
-      console.log('getAllUsers - Raw users from Firestore:', users.map(u => ({ id: u.id, name: u.name, email: u.email })));
 
       // Apply additional filters
       if (filters?.isActive !== undefined) {
