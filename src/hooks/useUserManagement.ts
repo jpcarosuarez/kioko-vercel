@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ApiService } from '../lib/apiService';
+import { UserManagementService } from '../lib/userManagement';
 import { User, CreateUserData, UpdateUserData, UserRole } from '../types/models';
 import { UserErrorHandler, handleGenericError } from '../lib/userErrorHandling';
 import { validateUserCreate, validateUserUpdate } from '../lib/userValidation';
@@ -51,20 +51,13 @@ export const useUserManagement = (): UseUserManagementReturn => {
         throw new Error(userError.message);
       }
 
-      // Use backend API to create user
-      const response = await ApiService.createUser({
-        email: userData.email,
-        password: userData.password,
-        name: userData.name,
-        phone: userData.phone,
-        role: userData.role,
-        isActive: userData.isActive ?? true
-      });
+      // Use Firebase directly to create user
+      const newUser = await UserManagementService.createUser(userData);
       
       // Add the new user to the current list
-      setUsers(prevUsers => [response.user, ...prevUsers]);
+      setUsers(prevUsers => [newUser, ...prevUsers]);
       
-      return response.user;
+      return newUser;
     } catch (error) {
       handleError(error);
       throw error;
@@ -86,15 +79,15 @@ export const useUserManagement = (): UseUserManagementReturn => {
         throw new Error(userError.message);
       }
 
-      // Use backend API to update user
-      const response = await ApiService.updateUser(userId, updates);
+      // Use Firebase directly to update user
+      const updatedUser = await UserManagementService.updateUser(userId, updates);
       
       // Update the user in the current list
       setUsers(prevUsers => 
-        prevUsers.map(user => user.id === userId ? response.user : user)
+        prevUsers.map(user => user.id === userId ? updatedUser : user)
       );
       
-      return response.user;
+      return updatedUser;
     } catch (error) {
       handleError(error);
       throw error;
@@ -108,8 +101,8 @@ export const useUserManagement = (): UseUserManagementReturn => {
     setError(null);
     
     try {
-      // Use backend API to delete user
-      await ApiService.deleteUser(userId);
+      // Use Firebase directly to delete user
+      await UserManagementService.deleteUser(userId);
       
       // Remove the user from the current list
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
@@ -140,9 +133,8 @@ export const useUserManagement = (): UseUserManagementReturn => {
         throw new Error(userError.message);
       }
 
-      // Note: Password change functionality should be implemented in the backend API
-      // For now, we'll throw an error indicating this feature is not yet implemented
-      throw new Error('Cambio de contraseña no implementado en el backend');
+      // Use Firebase directly to change password
+      await UserManagementService.changePassword(userId, newPassword);
     } catch (error) {
       handleError(error);
       throw error;
@@ -160,9 +152,9 @@ export const useUserManagement = (): UseUserManagementReturn => {
     setError(null);
     
     try {
-      // Use backend API to get users
-      const response = await ApiService.getUsers(filters);
-      setUsers(response.users);
+      // Use Firebase directly to get users
+      const users = await UserManagementService.getAllUsers(filters);
+      setUsers(users);
     } catch (error) {
       handleError(error);
     } finally {
@@ -175,9 +167,9 @@ export const useUserManagement = (): UseUserManagementReturn => {
     setError(null);
     
     try {
-      // Use backend API to get user by ID
-      const response = await ApiService.getUserById(userId);
-      return response.user;
+      // Use Firebase directly to get user by ID
+      const user = await UserManagementService.getUserById(userId);
+      return user;
     } catch (error) {
       handleError(error);
       return null;
@@ -191,15 +183,15 @@ export const useUserManagement = (): UseUserManagementReturn => {
     setError(null);
     
     try {
-      // Use backend API to toggle user status
-      const response = await ApiService.toggleUserStatus(userId);
+      // Use Firebase directly to toggle user status
+      const updatedUser = await UserManagementService.toggleUserStatus(userId);
       
       // Update the user in the current list
       setUsers(prevUsers => 
-        prevUsers.map(user => user.id === userId ? response.user : user)
+        prevUsers.map(user => user.id === userId ? updatedUser : user)
       );
       
-      return response.user;
+      return updatedUser;
     } catch (error) {
       handleError(error);
       throw error;
