@@ -15,7 +15,19 @@ import { notificationRouter } from "./notifications";
 const app = express();
 
 // Middleware
-app.use(cors({ origin: true }));
+app.use(cors({ 
+  origin: [
+    'https://kioko-vercel-snss.vercel.app',
+    'https://kiosko.com.co',
+    'http://kiosko.com.co',
+    'https://kioko-vercel.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
 
 /**

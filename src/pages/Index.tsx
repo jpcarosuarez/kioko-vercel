@@ -130,7 +130,7 @@ export default function Index() {
             </form>
 
             {/* Demo Login Buttons */}
-            <div className="mt-6 pt-4 border-t border-gray-100">
+            {/*<div className="mt-6 pt-4 border-t border-gray-100">
               <p className="text-xs text-gray-500 text-center mb-3">Acceso de demostración:</p>
               <div className="space-y-2">
                 <Button
@@ -161,7 +161,7 @@ export default function Index() {
                   👤 Inquilino
                 </Button>
               </div>
-            </div>
+            </div>*/}
           </CardContent>
         </Card>
 
