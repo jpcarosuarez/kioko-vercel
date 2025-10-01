@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { UserManagementService } from '../lib/userManagement';
+import { ApiService } from '../lib/apiService';
 import { User, CreateUserData, UpdateUserData, UserRole } from '../types/models';
 import { UserErrorHandler, handleGenericError } from '../lib/userErrorHandling';
 import { validateUserCreate, validateUserUpdate } from '../lib/userValidation';
@@ -51,13 +52,20 @@ export const useUserManagement = (): UseUserManagementReturn => {
         throw new Error(userError.message);
       }
 
-      // Use Firebase directly to create user
-      const newUser = await UserManagementService.createUser(userData);
+      // Use backend API to create user (requires admin permissions)
+      const response = await ApiService.createUser({
+        email: userData.email,
+        password: userData.password,
+        name: userData.name,
+        phone: userData.phone,
+        role: userData.role,
+        isActive: userData.isActive ?? true
+      });
       
       // Add the new user to the current list
-      setUsers(prevUsers => [newUser, ...prevUsers]);
+      setUsers(prevUsers => [response.user, ...prevUsers]);
       
-      return newUser;
+      return response.user;
     } catch (error) {
       handleError(error);
       throw error;
