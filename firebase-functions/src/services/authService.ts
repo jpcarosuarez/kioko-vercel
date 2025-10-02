@@ -571,4 +571,57 @@ export class AuthService {
       return false;
     }
   }
+
+  /**
+   * Change user password using Firebase Admin SDK
+   */
+  static async changePassword(
+    uid: string, 
+    newPassword: string, 
+    adminContext: AuthContext
+  ): Promise<{ success: boolean; message: string }> {
+    const context = { functionName: "changePassword", userId: adminContext.uid };
+    
+    try {
+      // Validate admin role
+      if (adminContext.role !== "admin") {
+        throw new HttpsError("permission-denied", "Only admins can change user passwords");
+      }
+
+      // Validate password length
+      if (newPassword.length < 6) {
+        throw new HttpsError("invalid-argument", "Password must be at least 6 characters long");
+      }
+
+      // Update user password using Firebase Admin SDK
+      await getAuth().updateUser(uid, {
+        password: newPassword
+      });
+
+      // Update user's updatedAt timestamp in Firestore
+      const db = getFirestore();
+      await db.collection('users').doc(uid).update({
+        updatedAt: new Date()
+      });
+
+      logInfo(`Password changed for user ${uid}`, { ...context, targetUserId: uid });
+
+      return {
+        success: true,
+        message: `Password successfully changed for user ${uid}`,
+      };
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      
+      logError(`Failed to change password for user ${uid}`, error as Error, { ...context, targetUserId: uid });
+      
+      if ((error as any).code === 'auth/user-not-found') {
+        throw new HttpsError("not-found", "User not found");
+      }
+      
+      throw new HttpsError("internal", `Failed to change password: ${(error as Error).message}`);
+    }
+  }
 }

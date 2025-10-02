@@ -262,6 +262,7 @@ export const UserForm: React.FC<UserFormProps> = ({
                 value={formData.phone}
                 onChange={(value) => handleInputChange('phone', value)}
                 error={errors.phone}
+                required={true}
                 placeholder="Ingrese el teléfono"
                 disabled={isLoading}
               />

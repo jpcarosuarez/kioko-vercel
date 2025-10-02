@@ -207,7 +207,7 @@ export class UserManagementService {
   }
 
   /**
-   * Change user password using Firebase Auth
+   * Change user password using backend API (Admin only)
    */
   static async changePassword(userId: string, newPassword: string): Promise<void> {
     try {
@@ -219,19 +219,11 @@ export class UserManagementService {
 
       const user = userDoc as User;
 
-      // Get Firebase user by UID
-      const firebaseUser = await this.getFirebaseUserByUid(user.uid);
-      if (!firebaseUser) {
-        throw new Error('Firebase user not found');
-      }
+      // Use backend API to change password (requires Admin SDK)
+      const { ApiService } = await import('./apiService');
+      await ApiService.changePassword(user.uid, newPassword);
 
-      // Update password in Firebase Auth
-      await updatePassword(firebaseUser, newPassword);
-
-      // Update the user's updatedAt timestamp in Firestore
-      await usersService.update(userId, {});
-
-      console.log(`Successfully changed password for user ${userId}`);
+      console.log(`Successfully changed password for user ${userId} via backend API`);
     } catch (error: any) {
       console.error('Error changing password:', error);
       
@@ -241,7 +233,8 @@ export class UserManagementService {
         throw new Error(userError.message);
       }
       
-      throw error;
+      const userError = handleGenericError(error);
+      throw new Error(userError.message);
     }
   }
 

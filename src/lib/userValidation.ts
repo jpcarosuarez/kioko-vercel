@@ -46,7 +46,7 @@ export const defaultValidationRules: UserValidationRules = {
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   },
   phone: {
-    required: false,
+    required: true,
     pattern: /^\+?[\d\s\-\(\)]{8,20}$/
   },
   password: {

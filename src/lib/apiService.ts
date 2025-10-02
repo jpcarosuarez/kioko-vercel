@@ -6,7 +6,7 @@
 import { auth } from './firebase';
 
 // API Configuration
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-hdh3n2p6bq-uc.a.run.app';
 
 // Types for API requests and responses
 export interface ApiError {
@@ -348,6 +348,25 @@ export class ApiService {
         return apiRequest<{ success: boolean; message: string; user: any }>(`/auth/toggleUserStatus/${userId}`, {
             method: 'PUT',
         });
+    }
+
+    /**
+     * Change user password (Admin only)
+     */
+    static async changePassword(uid: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await apiRequest<{ success: boolean; message: string }>('/auth/changePassword', {
+                method: 'POST',
+                body: JSON.stringify({
+                    uid,
+                    newPassword
+                })
+            });
+            return response;
+        } catch (error) {
+            console.error('Error changing password:', error);
+            throw error;
+        }
     }
 }
 
