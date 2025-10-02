@@ -30,6 +30,7 @@ export const UserManagement: React.FC = () => {
     createUser,
     updateUser,
     deleteUser,
+    changePassword,
     toggleUserStatus,
     getAllUsers,
     clearError
@@ -168,13 +169,8 @@ export const UserManagement: React.FC = () => {
     setChangePasswordDialog(prev => ({ ...prev, loading: true }));
 
     try {
-      // TODO: Implement password change functionality
-      // This would typically call a backend API or Firebase Admin SDK
-      console.log('Changing password for user:', changePasswordDialog.userId);
-      console.log('New password:', newPassword);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use the real changePassword function from useUserManagement hook
+      await changePassword(changePasswordDialog.userId, newPassword);
       
       toast.success('Contraseña actualizada exitosamente', {
         description: `La contraseña de ${changePasswordDialog.userName} ha sido cambiada.`
