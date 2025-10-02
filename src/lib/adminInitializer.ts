@@ -77,7 +77,7 @@ export class AdminInitializerService {
         isActive: true
       };
       
-      const adminId = await FirestoreService.usersService.create(adminData);
+      const adminId = await FirestoreService.createUser(adminData);
       
       return {
         id: adminId,

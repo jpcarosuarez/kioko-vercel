@@ -355,7 +355,7 @@ export class ApiService {
      */
     static async changePassword(uid: string, newPassword: string): Promise<{ success: boolean; message: string }> {
         try {
-            const response = await authenticatedApiRequest<{ success: boolean; message: string }>('/auth/changePassword', {
+            const response = await apiRequest<{ success: boolean; message: string }>('/auth/changePassword', {
                 method: 'POST',
                 body: JSON.stringify({
                     uid,
