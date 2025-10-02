@@ -748,4 +748,96 @@ router.post("/bootstrap", async (req, res): Promise<void> => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/changePassword:
+ *   post:
+ *     summary: Change user password
+ *     description: Change password for any user. Only admins can change passwords for other users.
+ *     tags: [Authentication]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [uid, newPassword]
+ *             properties:
+ *               uid:
+ *                 type: string
+ *                 example: "user123"
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *                 example: "newPassword123"
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin role required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/changePassword", verifyToken, requireAdmin, async (req: AuthenticatedRequest, res): Promise<void> => {
+  try {
+    const { uid, newPassword } = req.body;
+    
+    if (!uid || !newPassword) {
+      res.status(400).json({
+        error: "Missing required fields",
+        required: ["uid", "newPassword"]
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({
+        error: "Password too short",
+        message: "Password must be at least 6 characters long"
+      });
+      return;
+    }
+
+    const result = await AuthService.changePassword(uid, newPassword, {
+      uid: req.user!.uid,
+      role: req.user!.role,
+      email: req.user!.email
+    });
+    
+    res.json(result);
+  } catch (error: any) {
+    console.error("Error changing password:", error);
+    
+    if (error instanceof HttpsError) {
+      res.status(error.httpErrorCode.status).json({
+        error: error.code,
+        message: error.message
+      });
+      return;
+    }
+    
+    res.status(500).json({
+      error: "Failed to change password",
+      message: error.message
+    });
+  }
+});
+
 export { router as authRouter };
