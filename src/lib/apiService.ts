@@ -349,6 +349,25 @@ export class ApiService {
             method: 'PUT',
         });
     }
+
+    /**
+     * Change user password (Admin only)
+     */
+    static async changePassword(uid: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await authenticatedApiRequest<{ success: boolean; message: string }>('/auth/changePassword', {
+                method: 'POST',
+                body: JSON.stringify({
+                    uid,
+                    newPassword
+                })
+            });
+            return response;
+        } catch (error) {
+            console.error('Error changing password:', error);
+            throw error;
+        }
+    }
 }
 
 // Utility functions for common operations
@@ -422,25 +441,6 @@ export const apiUtils = {
         } catch (error) {
             console.error('Error checking system health:', error);
             return false;
-        }
-    },
-
-    /**
-     * Change user password (Admin only)
-     */
-    static async changePassword(uid: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-        try {
-            const response = await authenticatedApiRequest<{ success: boolean; message: string }>('/auth/changePassword', {
-                method: 'POST',
-                body: JSON.stringify({
-                    uid,
-                    newPassword
-                })
-            });
-            return response;
-        } catch (error) {
-            console.error('Error changing password:', error);
-            throw error;
         }
     }
 };

@@ -615,13 +615,13 @@ export class AuthService {
         throw error;
       }
       
-      logError(`Failed to change password for user ${uid}`, error, { ...context, targetUserId: uid });
+      logError(`Failed to change password for user ${uid}`, error as Error, { ...context, targetUserId: uid });
       
-      if (error.code === 'auth/user-not-found') {
+      if ((error as any).code === 'auth/user-not-found') {
         throw new HttpsError("not-found", "User not found");
       }
       
-      throw new HttpsError("internal", `Failed to change password: ${error.message}`);
+      throw new HttpsError("internal", `Failed to change password: ${(error as Error).message}`);
     }
   }
 }
