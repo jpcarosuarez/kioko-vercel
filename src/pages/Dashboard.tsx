@@ -138,7 +138,7 @@ export default function Dashboard() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             ¡Bienvenido, {user.displayName || 'Propietario'}!
           </h2>
-          <p className="text-gray-600">Gestiona y visualiza los documentos de tus propiedades</p>
+          <p className="text-gray-600">Gestiona y visualiza los documentos</p>
         </div>
 
         {/* Stats Cards */}
@@ -146,7 +146,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Mis Propiedades</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-700">Inmueble</CardTitle>
                 <Building className="h-5 w-5 text-blue-600" />
               </CardHeader>
               <CardContent>
@@ -166,7 +166,7 @@ export default function Dashboard() {
 
             <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-700">Ingresos Mensuales</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-700">Rentas Mensuales</CardTitle>
                 <span className="text-emerald-600">$</span>
               </CardHeader>
               <CardContent>
@@ -175,7 +175,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="text-sm text-slate-600">
-                    Valor total de arriendos
+                    Valor arriendos
                   </div>
                 </div>
               </CardContent>
@@ -201,15 +201,15 @@ export default function Dashboard() {
         {/* Properties Grid */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-gray-900">Tus Propiedades</h3>
+            <h3 className="text-xl font-semibold text-gray-900">Inmuebles</h3>
           </div>
 
           {properties.length === 0 ? (
             <Card className="p-8 text-center">
               <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No se Encontraron Propiedades</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No se Encontraron Inmuebles</h3>
               <p className="text-gray-500">
-                Aún no tienes propiedades asignadas a tu cuenta. Contacta al administrador para más información.
+                Aún no tienes inmuebles asignadas a tu cuenta. Contacta al administrador para más información.
               </p>
             </Card>
           ) : (
